@@ -218,7 +218,7 @@ instance Applicative Parser where
     Parser (a -> b)
     -> Parser a
     -> Parser b
-  (<*>) pab pa = (\a -> (\f -> f a) <$> pab) =<< pa
+  (<*>) pab pa = (<$> pa) =<< pab
 
 -- | Return a parser that produces a character but fails if
 --
@@ -392,8 +392,7 @@ thisMany ::
   Int
   -> Parser a
   -> Parser (List a)
-thisMany =
-  error "todo: Course.Parser#thisMany"
+thisMany i = sequenceParser . replicate i
 
 -- | This one is done for you.
 --
@@ -425,8 +424,10 @@ ageParser =
 -- True
 firstNameParser ::
   Parser Chars
-firstNameParser =
-  error "todo: Course.Parser#firstNameParser"
+firstNameParser = do
+  a <- upper
+  b <- list lower
+  pure (a :. b)
 
 -- | Write a parser for Person.surname.
 --
@@ -447,8 +448,11 @@ firstNameParser =
 -- True
 surnameParser ::
   Parser Chars
-surnameParser =
-  error "todo: Course.Parser#surnameParser"
+surnameParser = do
+  a <- upper
+  b <- thisMany 5 lower
+  c <- list lower
+  pure (a :. b ++ c)
 
 -- | Write a parser for Person.smoker.
 --
@@ -466,8 +470,7 @@ surnameParser =
 -- True
 smokerParser ::
   Parser Bool
-smokerParser =
-  error "todo: Course.Parser#smokerParser"
+smokerParser = (True <$ is 'y') ||| (False <$ is 'n')
 
 -- | Write part of a parser for Person#phoneBody.
 -- This parser will only produce a string of digits, dots or hyphens.
@@ -488,8 +491,7 @@ smokerParser =
 -- Result >a123-456< ""
 phoneBodyParser ::
   Parser Chars
-phoneBodyParser =
-  error "todo: Course.Parser#phoneBodyParser"
+phoneBodyParser = list (digit ||| is '-' ||| is '.')
 
 -- | Write a parser for Person.phone.
 --
@@ -510,8 +512,11 @@ phoneBodyParser =
 -- True
 phoneParser ::
   Parser Chars
-phoneParser =
-  error "todo: Course.Parser#phoneParser"
+phoneParser = do
+  leadingDigit <- digit
+  body         <- phoneBodyParser
+  _            <- is '#'
+  pure $ leadingDigit :. body
 
 -- | Write a parser for Person.
 --
@@ -568,8 +573,17 @@ phoneParser =
 -- Result >< Person 123 "Fred" "Clarkson" True "123-456.789"
 personParser ::
   Parser Person
-personParser =
-  error "todo: Course.Parser#personParser"
+personParser = do
+  age <- ageParser
+  _ <- spaces1
+  firstName <- firstNameParser
+  _ <- spaces1
+  surname <- surnameParser
+  _ <- spaces1
+  smoker <- smokerParser
+  _ <- spaces1
+  phone <- phoneParser
+  pure $ Person age firstName surname smoker phone
 
 -- Make sure all the tests pass!
 
