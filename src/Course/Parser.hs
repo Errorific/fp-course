@@ -219,10 +219,6 @@ instance Applicative Parser where
     -> Parser a
     -> Parser b
   (<*>) pab pa = (\a -> (\f -> f a) <$> pab) =<< pa
-  -- f <*> a =
-  --  f >>= \f' ->
-  --  a >>= \a' ->
-  --  pure (f' a')
 
 -- | Return a parser that produces a character but fails if
 --
