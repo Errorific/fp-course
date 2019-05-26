@@ -32,13 +32,12 @@ anagrams ::
   Chars
   -> FilePath
   -> IO (List Chars)
-anagrams =
-  error "todo: Course.Anagrams#anagrams"
+anagrams word fp =
+  intersectBy equalIgnoringCase (permutations word) <$> (lines <$> readFile fp)
 
 -- Compare two strings for equality, ignoring case
 equalIgnoringCase ::
   Chars
   -> Chars
   -> Bool
-equalIgnoringCase =
-  error "todo: Course.Anagrams#equalIgnoringCase"
+equalIgnoringCase c1s c2s = (toLower <$> c1s) == (toLower <$> c2s)

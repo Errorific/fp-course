@@ -409,8 +409,11 @@ thisMany i = sequenceParser . replicate i
 ageParser ::
   Parser Int
 ageParser =
-  (\k -> case read k of Empty  -> constantParser (UnexpectedString k)
-                        Full h -> pure h) =<< (list1 digit)
+  list1 digit
+  >>= (\k ->
+         case read k of Empty  -> constantParser (UnexpectedString k)
+                        Full h -> pure h
+      )
 
 -- | Write a parser for Person.firstName.
 -- /First Name: non-empty string that starts with a capital letter and is followed by zero or more lower-case letters/
@@ -424,10 +427,11 @@ ageParser =
 -- True
 firstNameParser ::
   Parser Chars
-firstNameParser = do
-  a <- upper
-  b <- list lower
-  pure (a :. b)
+-- firstNameParser = do
+--   a <- upper
+--   b <- list lower
+--   pure (a :. b)
+firstNameParser = (:.) <$> upper <*> list lower
 
 -- | Write a parser for Person.surname.
 --
@@ -448,11 +452,15 @@ firstNameParser = do
 -- True
 surnameParser ::
   Parser Chars
-surnameParser = do
-  a <- upper
-  b <- thisMany 5 lower
-  c <- list lower
-  pure (a :. b ++ c)
+-- surnameParser = do
+--   a <- upper
+--   b <- thisMany 5 lower
+--   c <- list lower
+--   pure (a :. b ++ c)
+surnameParser = (\a b c -> a :. b ++ c)
+  <$> upper
+  <*> thisMany 5 lower
+  <*> list lower
 
 -- | Write a parser for Person.smoker.
 --
@@ -512,11 +520,15 @@ phoneBodyParser = list (digit ||| is '-' ||| is '.')
 -- True
 phoneParser ::
   Parser Chars
-phoneParser = do
-  leadingDigit <- digit
-  body         <- phoneBodyParser
-  _            <- is '#'
-  pure $ leadingDigit :. body
+-- phoneParser = do
+--   leadingDigit <- digit
+--   body         <- phoneBodyParser
+--   _            <- is '#'
+--   pure $ leadingDigit :. body
+phoneParser = (:.)
+  <$> digit
+  <*> phoneBodyParser
+  <*  is '#'
 
 -- | Write a parser for Person.
 --
@@ -573,17 +585,23 @@ phoneParser = do
 -- Result >< Person 123 "Fred" "Clarkson" True "123-456.789"
 personParser ::
   Parser Person
-personParser = do
-  age <- ageParser
-  _ <- spaces1
-  firstName <- firstNameParser
-  _ <- spaces1
-  surname <- surnameParser
-  _ <- spaces1
-  smoker <- smokerParser
-  _ <- spaces1
-  phone <- phoneParser
-  pure $ Person age firstName surname smoker phone
+-- personParser = do
+--   age <- ageParser
+--   _ <- spaces1
+--   firstName <- firstNameParser
+--   _ <- spaces1
+--   surname <- surnameParser
+--   _ <- spaces1
+--   smoker <- smokerParser
+--   _ <- spaces1
+--   phone <- phoneParser
+--   pure $ Person age firstName surname smoker phone
+personParser = Person
+  <$>  ageParser
+  <*>~ firstNameParser
+  <*>~ surnameParser
+  <*>~ smokerParser
+  <*>~ phoneParser
 
 -- Make sure all the tests pass!
 

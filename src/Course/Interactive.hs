@@ -83,7 +83,15 @@ data Op =
 convertInteractive ::
   IO ()
 convertInteractive =
-  error "todo: Course.Interactive#convertInteractive"
+  putStr "Enter a string: " >-
+  vooid (untilM
+          (\c ->
+             if c == '\r'
+             then pure True
+             else pure False
+          )
+          (getChar >>= (\c -> putStr (toUpper c :. Nil) >- pure c ))
+        )
 
 -- |
 --

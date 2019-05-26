@@ -205,11 +205,12 @@ between ::
   -> Parser c
   -> Parser a
   -> Parser a
-between s e b = do
-  _ <- s
-  o <- b
-  _ <- e
-  pure o
+-- between s e b = do
+--   _ <- s
+--   o <- b
+--   _ <- e
+--   pure o
+between s e b = s *> b <* e
 
 -- | Write a function that applies the given parser in between the two given characters.
 --
@@ -231,7 +232,7 @@ betweenCharTok ::
   -> Char
   -> Parser a
   -> Parser a
-betweenCharTok s e = between (charTok s) (charTok e)
+betweenCharTok s e = between (is s) (charTok e)
 
 -- | Write a function that parses 4 hex digits and return the character value.
 --
@@ -299,10 +300,11 @@ sepby1 ::
   Parser a
   -> Parser s
   -> Parser (List a)
-sepby1 pa ps = do
-  f <- pa
-  r <- list (ps *> pa)
-  pure $ f :. r
+-- sepby1 pa ps = do
+--   f <- pa
+--   r <- list (ps *> pa)
+--   pure $ f :. r
+sepby1 pa ps = (:.) <$> pa <*> list (ps *> pa)
 
 -- | Write a function that produces a list of values coming off the given parser,
 -- separated by the second given parser.
